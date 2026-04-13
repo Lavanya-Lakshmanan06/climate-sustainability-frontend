@@ -13,17 +13,59 @@ import {
 
 export default function Dashboard() {
   const [data, setData] = useState([]);
+  const [pieData, setPieData] = useState([]);
+  const [metrics, setMetrics] = useState({
+    totalEmission: 0,
+    scope1: 0,
+    scope2: 0,
+    scope3: 0
+  });
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("emissions")) || [];
-    setData(stored);
+    const fetchDashboardData = async () => {
+      try {
+        const userEmail = localStorage.getItem("userEmail") || "test@test.com";
+        const response = await fetch(`/api/energy/dashboard?userEmail=${userEmail}`);
+        if (response.ok) {
+          const dashboard = await response.json();
+          setData(dashboard.trend);
+          setPieData(dashboard.pie);
+          setMetrics({
+            totalEmission: dashboard.totalEmission,
+            scope1: dashboard.scope1,
+            scope2: dashboard.scope2,
+            scope3: dashboard.scope3
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  const pieData = [
-    { name: "Electricity", value: 210 },
-    { name: "Diesel", value: 120 },
-    { name: "LPG", value: 52 },
-  ];
+  const handleDownloadReport = () => {
+    const reportContent = `
+Carbon Sustainability Report
+----------------------------
+Total Emission: ${metrics.totalEmission} kg
+Scope 1 (Direct Emissions): ${metrics.scope1} kg
+Scope 2 (Electricity): ${metrics.scope2} kg
+Scope 3 (Supply Chain): ${metrics.scope3} kg
+
+Trend Data:
+${data.map(d => `${d.date}: ${d.emission} kg`).join('\n')}
+    `;
+    const blob = new Blob([reportContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sustainability-report.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   const COLORS = ["#22c55e", "#3b82f6", "#facc15"];
 
@@ -36,7 +78,10 @@ export default function Dashboard() {
           Carbon Dashboard
         </h1>
 
-        <button className="bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg font-medium transition">
+        <button 
+          onClick={handleDownloadReport}
+          className="bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg font-medium transition"
+        >
           Download Sustainability Report
         </button>
       </div>
@@ -46,7 +91,7 @@ export default function Dashboard() {
 
         <div className="bg-white/5 p-6 rounded-xl border border-white/10">
           <p className="text-gray-400 text-sm">Total Emission</p>
-          <h2 className="text-2xl font-bold text-green-400">382 kg</h2>
+          <h2 className="text-2xl font-bold text-green-400">{metrics.totalEmission} kg</h2>
         </div>
 
         <div className="bg-white/5 p-6 rounded-xl border border-white/10">
@@ -66,19 +111,19 @@ export default function Dashboard() {
 
         <div className="bg-white/5 p-6 rounded-xl border border-white/10">
           <p className="text-gray-400 text-sm">Scope 1</p>
-          <h2 className="text-xl font-bold text-green-400">120 kg</h2>
+          <h2 className="text-xl font-bold text-green-400">{metrics.scope1} kg</h2>
           <p className="text-xs text-gray-500">Direct Emissions</p>
         </div>
 
         <div className="bg-white/5 p-6 rounded-xl border border-white/10">
           <p className="text-gray-400 text-sm">Scope 2</p>
-          <h2 className="text-xl font-bold text-blue-400">210 kg</h2>
+          <h2 className="text-xl font-bold text-blue-400">{metrics.scope2} kg</h2>
           <p className="text-xs text-gray-500">Electricity</p>
         </div>
 
         <div className="bg-white/5 p-6 rounded-xl border border-white/10">
           <p className="text-gray-400 text-sm">Scope 3</p>
-          <h2 className="text-xl font-bold text-yellow-400">95 kg</h2>
+          <h2 className="text-xl font-bold text-yellow-400">{metrics.scope3} kg</h2>
           <p className="text-xs text-gray-500">Supply Chain</p>
         </div>
 

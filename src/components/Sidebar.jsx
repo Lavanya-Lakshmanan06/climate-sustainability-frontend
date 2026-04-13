@@ -1,15 +1,46 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    navigate("/login");
+    setIsLoggingOut(true);
+    setTimeout(() => {
+      localStorage.removeItem("isLoggedIn");
+      navigate("/login");
+    }, 2000);
   };
 
   return (
-    <div className="w-64 bg-[#0B1120] border-r border-white/10 p-6 flex flex-col">
+    <>
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0F172A]/95 backdrop-blur-md transition-all duration-500 animate-in fade-in zoom-in duration-500">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-red-400 opacity-20 blur-xl rounded-full"></div>
+            <div className="w-24 h-24 bg-red-500/20 border border-red-500/50 rounded-full flex items-center justify-center animate-bounce">
+              <LogOut className="w-12 h-12 text-red-400 ml-1" />
+            </div>
+          </div>
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-3xl font-bold text-white tracking-wide">Logging Out</h2>
+            <p className="text-gray-400">See you next time!</p>
+          </div>
+          <div className="w-64 bg-gray-800 rounded-full h-1 overflow-hidden">
+            <div className="bg-red-500 h-1 rounded-full transition-all duration-[2000ms] w-full ease-linear" style={{ animation: "progress3 2s linear" }}></div>
+          </div>
+          <style>{`
+            @keyframes progress3 {
+              0% { width: 0%; }
+              100% { width: 100%; }
+            }
+          `}</style>
+        </div>
+      )}
+      <div className="w-64 bg-[#0B1120] border-r border-white/10 p-6 flex flex-col min-h-screen">
+
 
       {/* Logo Section */}
       <div className="mb-10">
@@ -92,5 +123,6 @@ export default function Sidebar() {
       </button>
 
     </div>
+    </>
   );
 }
